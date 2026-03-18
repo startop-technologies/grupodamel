@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galería Damel · Estrategia Canal Digital · Startop Consulting</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:          #0C0C0F;
+  --surface:     #141418;
+  --surface2:    #1C1C22;
+  --surface3:    #24242C;
+  --orange:      #FF914D;
+  --orange2:     #FFB380;
+  --orange-dim:  #FF914D18;
+  --orange-glow: #FF914D40;
+  --teal:        #00C8C8;
+  --teal-dim:    #00C8C810;
+  --red:         #E05252;
+  --red-dim:     #E0525215;
+  --green:       #52C878;
+  --green-dim:   #52C87815;
+  --white:       #F0EFE8;
+  --muted:       #6B6B7A;
+  --border:      rgba(255,255,255,0.06);
+  --border2:     rgba(255,255,255,0.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--white);
+  font-family: 'DM Sans', sans-serif; font-weight: 400;
+}
+
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+#deck { width: 100%; height: 100%; position: relative; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding: 56px 80px;
+  padding-bottom: 100px;
+  opacity: 0;
+  transform: translateX(60px);
+  transition: opacity 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--bg);
+}
+.slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+.slide.exit-left { opacity: 0; transform: translateX(-60px); transition: opacity 0.35s ease, transform 0.35s ease; }
+
+/* NAV */
+#nav {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 20px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 100px; padding: 10px 20px;
+  z-index: 1000; backdrop-filter: blur(20px);
+  opacity: 1; transition: opacity 0.4s ease;
+}
+#nav.hidden { opacity: 0; pointer-events: none; }
+#nav button {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 18px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; transition: color 0.2s, background 0.2s;
+}
+#nav button:hover { color: var(--white); background: var(--surface3); }
+#nav button:disabled { opacity: 0.2; cursor: not-allowed; }
+#slide-counter { font-family: 'DM Sans', monospace; font-size: 12px; color: var(--muted); min-width: 48px; text-align: center; letter-spacing: 0.08em; }
+#dots { display: flex; gap: 6px; align-items: center; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--surface3); border: 1px solid var(--border2); cursor: pointer; transition: all 0.3s; }
+.dot.active { background: var(--orange); border-color: var(--orange); width: 18px; border-radius: 3px; }
+
+/* TOPBAR */
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+.topbar-brand { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 12px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; }
+.topbar-info { font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+
+/* LABELS & TITLES */
+.slide-label { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; color: var(--orange); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 16px; opacity: 0.85; }
+.slide-label.teal { color: var(--teal); }
+.slide-label.muted { color: var(--muted); }
+.slide-title { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(34px, 4vw, 54px); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 28px; color: var(--white); }
+.slide-title em { font-style: normal; color: var(--orange); }
+.slide-title .teal { color: var(--teal); }
+
+/* COVER */
+.slide-cover { justify-content: center; background: radial-gradient(ellipse at 70% 40%, var(--orange-dim) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, #00C8C808 0%, transparent 50%); }
+.cover-eyebrow { font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+.cover-line { width: 120px; height: 2px; background: linear-gradient(90deg, var(--orange), transparent); margin-bottom: 28px; }
+.cover-title { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: clamp(52px, 7vw, 88px); line-height: 0.95; letter-spacing: -0.03em; margin-bottom: 28px; }
+.cover-title .line1 { color: var(--white); display: block; }
+.cover-title .line2 { color: var(--orange); display: block; }
+.cover-desc { font-size: 15px; color: var(--muted); line-height: 1.7; max-width: 520px; margin-bottom: 48px; }
+.cover-meta { display: flex; gap: 40px; align-items: center; }
+.cover-meta-item { font-size: 13px; color: var(--muted); }
+.cover-meta-item strong { color: var(--white); display: block; font-size: 14px; margin-bottom: 2px; }
+
+/* CLOSE */
+.slide-close { background: radial-gradient(ellipse at 50% 50%, var(--orange-dim) 0%, transparent 65%); }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+.card.accent-left { border-left: 3px solid var(--orange); }
+.card.teal-left { border-left: 3px solid var(--teal); }
+.card-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--orange); margin-bottom: 8px; font-family: 'DM Sans', sans-serif; }
+.card-title { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 17px; color: var(--white); margin-bottom: 8px; }
+.card-body { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+/* CALLOUT */
+.callout { background: var(--orange-dim); border: 1px solid var(--orange-glow); border-left: 3px solid var(--orange); border-radius: 10px; padding: 18px 22px; margin-top: 14px; }
+.callout.teal { background: var(--teal-dim); border-color: #00C8C830; border-left-color: var(--teal); }
+.callout.red { background: var(--red-dim); border-color: var(--red); border-left-color: var(--red); }
+.callout-title { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 12px; color: var(--orange); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+.callout p { font-size: 13px; color: var(--white); line-height: 1.6; }
+.callout strong { color: var(--orange); }
+
+/* KPI */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.kpi-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+.kpi-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+.kpi-value { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 30px; color: var(--white); margin-bottom: 4px; }
+.kpi-sub { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.kpi-box.accent { border-color: var(--orange); background: var(--orange-dim); }
+.kpi-box.accent .kpi-value { color: var(--orange); }
+.kpi-box.good { border-color: var(--green); background: var(--green-dim); }
+.kpi-box.good .kpi-value { color: var(--green); }
+.kpi-box.teal { border-color: var(--teal); background: var(--teal-dim); }
+.kpi-box.teal .kpi-value { color: var(--teal); }
+
+/* GRIDS */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; flex: 1; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; flex: 1; }
+
+/* AUDIENCE CARDS */
+.audience-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+.audience-badge { display: inline-block; font-size: 10px; font-family: 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.12em; padding: 4px 10px; border-radius: 6px; margin-bottom: 4px; }
+.audience-badge.orange { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-glow); }
+.audience-badge.teal { background: var(--teal-dim); color: var(--teal); border: 1px solid #00C8C830; }
+.audience-name { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 22px; color: var(--white); }
+.audience-tagline { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.audience-rows { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--border); padding-top: 12px; }
+.audience-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.audience-row:last-child { border-bottom: none; }
+.audience-row-key { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.audience-row-val { font-size: 13px; color: var(--white); font-weight: 500; text-align: right; }
+.trigger-box { background: var(--surface2); border-radius: 8px; padding: 12px 14px; border-left: 2px solid var(--orange); }
+.t-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--orange); margin-bottom: 4px; }
+.trigger-box p { font-size: 12px; color: var(--white); line-height: 1.5; }
+
+/* FUNNEL */
+.funnel { display: flex; flex-direction: column; gap: 0; flex: 1; }
+.funnel-step { display: flex; align-items: stretch; gap: 20px; position: relative; }
+.funnel-step:not(:last-child)::after { content: ''; position: absolute; left: 26px; bottom: -16px; width: 1px; height: 16px; background: var(--border2); }
+.funnel-num { width: 52px; height: 52px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 18px; color: var(--orange); flex-shrink: 0; margin-top: 2px; }
+.funnel-body { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; }
+.funnel-title { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 15px; color: var(--white); margin-bottom: 4px; }
+.funnel-desc { font-size: 12px; color: var(--muted); line-height: 1.55; }
+.funnel-tag { display: inline-block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; }
+.funnel-tag.orange { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-glow); }
+.funnel-tag.teal { background: var(--teal-dim); color: var(--teal); }
+.funnel-tag.green { background: var(--green-dim); color: var(--green); }
+
+/* WA MESSAGE */
+.wa-msg { background: #1A2F1D; border: 1px solid #2E5233; border-radius: 12px; border-bottom-left-radius: 3px; padding: 14px 18px; font-size: 13px; color: #A8D5AE; line-height: 1.6; margin: 10px 0; max-width: 90%; }
+
+/* TIMELINE */
+.timeline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; flex: 1; }
+.tl-col-title { font-family: 'DM Sans', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.tl-item { display: grid; grid-template-columns: 90px 1fr; position: relative; }
+.tl-item::before { content: ''; position: absolute; left: 90px; top: 0; bottom: 0; width: 1px; background: var(--border2); }
+.tl-date { font-family: 'DM Sans', sans-serif; font-size: 10px; color: var(--muted); padding: 10px 12px 10px 0; text-align: right; line-height: 1.4; }
+.tl-content { padding: 10px 0 10px 20px; position: relative; }
+.tl-content::before { content: ''; position: absolute; left: -4px; top: 15px; width: 8px; height: 8px; border-radius: 50%; background: var(--surface3); border: 2px solid var(--border2); }
+.tl-item.milestone .tl-content::before { background: var(--orange); border-color: var(--orange); box-shadow: 0 0 0 4px var(--orange-dim); }
+.tl-item.launch .tl-content::before { background: var(--teal); border-color: var(--teal); box-shadow: 0 0 0 4px var(--teal-dim); }
+.tl-title { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--white); margin-bottom: 2px; }
+.tl-desc { font-size: 11px; color: var(--muted); line-height: 1.5; max-width: 360px; }
+.tl-tag { display: inline-block; font-family: 'DM Sans', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; padding: 2px 7px; border-radius: 4px; margin-bottom: 3px; }
+.tl-tag.setup { background: var(--surface3); color: var(--muted); }
+.tl-tag.on { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-glow); }
+.tl-tag.hito { background: #00C8C815; color: var(--teal); border: 1px solid #00C8C820; }
+
+/* METRIC TABLE */
+.metric-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.metric-table th { text-align: left; padding: 9px 14px; font-family: 'DM Sans', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); border-bottom: 1px solid var(--border2); }
+.metric-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--white); vertical-align: middle; }
+.metric-table tr:last-child td { border-bottom: none; }
+.metric-table tr:hover td { background: var(--surface2); }
+.metric-table .hl { color: var(--orange); font-weight: 600; }
+.metric-table .g { color: var(--green); }
+.metric-table .m { color: var(--muted); font-size: 12px; }
+
+/* PASO CARDS */
+.paso-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+.paso-num { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 900; font-size: 36px; color: var(--orange); opacity: 0.25; line-height: 1; margin-bottom: 6px; }
+.paso-title { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 15px; color: var(--white); margin-bottom: 6px; }
+.paso-body { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.paso-owner { display: inline-block; margin-top: 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; padding: 3px 9px; border-radius: 4px; background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-glow); }
+.paso-owner.teal { background: var(--teal-dim); color: var(--teal); border-color: #00C8C830; }
+
+/* AGENDA LIST */
+.agenda-list { display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center; }
+.agenda-item { display: flex; align-items: center; gap: 20px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; transition: border-color 0.2s; }
+.agenda-item:hover { border-color: var(--border2); }
+.agenda-idx { font-family: 'DM Sans', monospace; font-size: 11px; color: var(--muted); width: 24px; flex-shrink: 0; }
+.agenda-text { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 15px; color: var(--white); flex: 1; }
+.agenda-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; padding: 3px 9px; border-radius: 4px; }
+.agenda-label.orange { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-glow); }
+.agenda-label.teal { background: var(--teal-dim); color: var(--teal); }
+.agenda-label.muted { background: var(--surface2); color: var(--muted); }
+
+/* PERSON CARD */
+.person-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; text-align: center; min-width: 160px; }
+.person-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--orange-dim); border: 2px solid var(--orange-glow); display: flex; align-items: center; justify-content: center; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 16px; color: var(--orange); margin: 0 auto 10px; }
+.person-name { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: var(--white); margin-bottom: 3px; }
+.person-role { font-size: 11px; color: var(--muted); }
+
+/* CHANNEL PILL */
+.channel-pill { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; }
+.channel-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.channel-name { font-size: 13px; font-weight: 500; color: var(--white); flex: 1; }
+.channel-budget { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 15px; color: var(--orange); }
+</style>
+</head>
+<body>
+
+<div id="deck"></div>
+
+<div id="nav">
+  <button id="prev" title="Anterior (←)">←</button>
+  <div id="dots"></div>
+  <span id="slide-counter">1 / 1</span>
+  <button id="next" title="Siguiente (→)">→</button>
+</div>
+
+<script>
+const slides = [
+
+  // ── 0 · PORTADA ─────────────────────────────────────────────
+  {
+    id: 'portada',
+    render: () => `
+      <div class="slide slide-cover">
+        <div class="cover-eyebrow">STARTOP CONSULTING · RUTA A — PREP PERFORMANCE</div>
+        <div class="cover-line"></div>
+        <div class="cover-title">
+          <span class="line1">Estrategia del</span>
+          <span class="line2">Canal Digital</span>
+        </div>
+        <div class="cover-desc">
+          Diagnóstico, posicionamiento, embudo de ventas y plan de activación para el canal digital de Galería Damel.
+        </div>
+        <div class="cover-meta">
+          <div class="cover-meta-item"><strong>Galería Damel</strong>Cliente</div>
+          <div class="cover-meta-item"><strong>Marzo 2026</strong>Versión 1.0</div>
+          <div class="cover-meta-item"><strong>Confidencial</strong>Uso interno</div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 1 · AGENDA ──────────────────────────────────────────────
+  {
+    id: 'agenda',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">Agenda</div>
+        <div class="slide-title">Lo que vemos<br><em>hoy</em></div>
+        <div class="agenda-list">
+          <div class="agenda-item">
+            <div class="agenda-idx">01</div>
+            <div class="agenda-text">Premisa estratégica</div>
+            <div class="agenda-label orange">Contexto</div>
+          </div>
+          <div class="agenda-item">
+            <div class="agenda-idx">02</div>
+            <div class="agenda-text">Datos del negocio</div>
+            <div class="agenda-label orange">Diagnóstico</div>
+          </div>
+          <div class="agenda-item">
+            <div class="agenda-idx">03</div>
+            <div class="agenda-text">Posicionamiento y audiencia</div>
+            <div class="agenda-label orange">Estrategia</div>
+          </div>
+          <div class="agenda-item">
+            <div class="agenda-idx">04</div>
+            <div class="agenda-text">Embudo de ventas</div>
+            <div class="agenda-label orange">Estrategia</div>
+          </div>
+          <div class="agenda-item">
+            <div class="agenda-idx">05</div>
+            <div class="agenda-text">Canales y presupuesto</div>
+            <div class="agenda-label orange">Táctica</div>
+          </div>
+          <div class="agenda-item">
+            <div class="agenda-idx">06</div>
+            <div class="agenda-text">Plan de activación y métricas</div>
+            <div class="agenda-label teal">Ejecución</div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 2 · PREMISA ─────────────────────────────────────────────
+  {
+    id: 'premisa',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">01 · Premisa Estratégica</div>
+        <div class="slide-title">El modelo funciona.<br>El <em>volumen</em> no escala.</div>
+        <div class="two-col" style="flex:1;align-items:start;gap:24px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card accent-left">
+              <div class="card-label">Lo que funciona hoy</div>
+              <div class="card-title">Tasa de cierre muy alta</div>
+              <div class="card-body">Cuando llega un prospecto referido con confianza preexistente, David cierra prácticamente siempre. El proceso conversacional por WhatsApp es el diferenciador real.</div>
+            </div>
+            <div class="card" style="border-color:var(--red)">
+              <div class="card-label" style="color:var(--red)">El problema central</div>
+              <div class="card-title">El volumen depende de factores externos</div>
+              <div class="card-body">El calendario de subastas de terceros, la cadencia de cambios de casa en la red social de David, y la disposición orgánica de los clientes a referirlo. Ninguno de los tres es controlable.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="callout">
+              <div class="callout-title">El objetivo del canal digital</div>
+              <p>Construir un flujo constante de prospectos con intención de compra que lleguen a David ya calificados, <strong>sin depender del siguiente evento ni de la siguiente referencia espontánea.</strong></p>
+            </div>
+            <div class="card accent-left">
+              <div class="card-label">La oportunidad</div>
+              <div class="card-title">Tasa de recompra extraordinaria</div>
+              <div class="card-body">15 de 55 clientes registrados han comprado más de una vez en un bien de lujo con espacio físico finito. Quien compra una vez, confía y vuelve.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 3 · DATOS DEL NEGOCIO ───────────────────────────────────
+  {
+    id: 'datos',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">02 · Diagnóstico</div>
+        <div class="slide-title">31 meses de datos.<br><em>Tres señales</em> clave.</div>
+        <div class="kpi-grid" style="margin-bottom:20px">
+          <div class="kpi-box accent">
+            <div class="kpi-label">Ticket promedio real</div>
+            <div class="kpi-value">$50K</div>
+            <div class="kpi-sub">Venta directa corregida (era $35K por obras de subasta)</div>
+          </div>
+          <div class="kpi-box accent">
+            <div class="kpi-label">Meta mensual</div>
+            <div class="kpi-value">$250K</div>
+            <div class="kpi-sub">Ingresos objetivo = 5 ventas × $50K ticket</div>
+          </div>
+          <div class="kpi-box good">
+            <div class="kpi-label">Clientes con recompra</div>
+            <div class="kpi-value">15/55</div>
+            <div class="kpi-sub">En un bien de lujo con espacio físico finito</div>
+          </div>
+          <div class="kpi-box teal">
+            <div class="kpi-label">Ingresos totales</div>
+            <div class="kpi-value">$4M+</div>
+            <div class="kpi-sub">Sep 2023 – Mar 2026 · 27 meses activos</div>
+          </div>
+        </div>
+        <div class="callout">
+          <div class="callout-title">Señal estratégica del Excel</div>
+          <p>2024 fue excepcional por tres subastas masivas en Q4. Sin ese volumen de eventos, 2025 cayó 59% en ingresos. La venta directa creció de 17 a 20 transacciones, pero no compensó la caída. <strong>El canal digital debe construir el flujo que los eventos no garantizan.</strong></p>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 4 · POSICIONAMIENTO ─────────────────────────────────────
+  {
+    id: 'posicionamiento',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">03 · Posicionamiento</div>
+        <div class="slide-title">El primer peldaño<br>del <em>arte mexicano</em>.</div>
+        <div class="two-col" style="flex:1;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card accent-left">
+              <div class="card-label">Qué es Damel realmente</div>
+              <div class="card-title">Un servicio de curaduría personal</div>
+              <div class="card-body">David actúa como intermediario de confianza entre personas que quieren arte mexicano para sus casas y los artistas que lo producen. Sin espacio físico, sin inventario fijo, sin representación formal. Todo bajo pedido, todo conversacional.</div>
+            </div>
+            <div class="card accent-left">
+              <div class="card-label">El tono vs. el producto</div>
+              <div class="card-title">Propósito cultural como credencial</div>
+              <div class="card-body">La narrativa sobre artistas y su proceso construye confianza y distinción. El llamado a la acción siempre es concreto: una obra específica, para un espacio específico, con un proceso simple.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="callout">
+              <div class="callout-title">Declaración de posicionamiento</div>
+              <p>Damel es el <strong>primer punto de acceso al arte mexicano</strong> para la persona que quiere una obra original en su espacio pero no sabe cómo moverse en ese mercado.</p>
+            </div>
+            <div class="callout teal">
+              <div class="callout-title" style="color:var(--teal)">Principio editorial</div>
+              <p style="color:var(--white)">El propósito cultural es el <strong style="color:var(--teal)">tono</strong>. El producto es la obra. La venta es la conversación.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 5 · AUDIENCIA ───────────────────────────────────────────
+  {
+    id: 'audiencia',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">03 · Audiencia</div>
+        <div class="slide-title">Un perfil concreto,<br>un <em>momento</em> específico.</div>
+        <div class="two-col" style="flex:1;align-items:start">
+          <div class="audience-card">
+            <div class="audience-badge orange">Buyer Persona · Canal Digital</div>
+            <div class="audience-name">La Decoradora<br>con Presupuesto</div>
+            <div class="audience-tagline">No es coleccionista. Está decorando un espacio y quiere hacerlo bien, con obra original, sin tener que entender el mercado del arte.</div>
+            <div class="audience-rows">
+              <div class="audience-row"><div class="audience-row-key">Edad</div><div class="audience-row-val">35 – 60 años</div></div>
+              <div class="audience-row"><div class="audience-row-key">Ubicación</div><div class="audience-row-val">Monterrey · Culiacán · CDMX</div></div>
+              <div class="audience-row"><div class="audience-row-key">NSE</div><div class="audience-row-val">A / B</div></div>
+              <div class="audience-row"><div class="audience-row-key">Compras online</div><div class="audience-row-val">Sin fricción digital</div></div>
+              <div class="audience-row"><div class="audience-row-key">Relación con el arte</div><div class="audience-row-val">Gusto estético sin conocimiento formal</div></div>
+            </div>
+            <div class="trigger-box">
+              <div class="t-label">Trigger de activación</div>
+              <p>Casa nueva, remodelación o departamento para un hijo. El espacio disponible gatilla la decisión de compra.</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card accent-left">
+              <div class="card-label">Lo que decide la compra</div>
+              <div class="card-title">Oferta + confianza</div>
+              <div class="card-body">La obra tiene que llamarle la atención — sin eso no hay venta, independientemente de la confianza. La confianza en David es lo que inclina la balanza cuando la oferta conecta.</div>
+            </div>
+            <div class="card accent-left">
+              <div class="card-label">Segmentación Meta Ads</div>
+              <div class="card-title">Dos audiencias en paralelo</div>
+              <div class="card-body">
+                <strong style="color:var(--white);font-size:12px">Audiencia 1 — Intereses:</strong><br>
+                <span style="font-size:12px">Decoración, diseño de interiores, arte y cultura. MTY + Culiacán + CDMX, 28–55 años.</span><br><br>
+                <strong style="color:var(--white);font-size:12px">Audiencia 2 — Lookalike:</strong><br>
+                <span style="font-size:12px">Construida sobre el Pixel instalado en galeriadamel.com.</span>
+              </div>
+            </div>
+            <div class="callout">
+              <div class="callout-title">Dato de validación</div>
+              <p>La cadena suegra → hermana → amiga de Culiacán produjo múltiples ventas y <strong>sigue activa</strong>. El perfil correcto refiere de manera natural.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 6 · EMBUDO ──────────────────────────────────────────────
+  {
+    id: 'embudo',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">04 · Embudo de Ventas</div>
+        <div class="slide-title">David entra cuando<br>ya sabe con <em>quién habla</em>.</div>
+        <div class="two-col" style="flex:1;align-items:start">
+          <div class="funnel">
+            <div class="funnel-step">
+              <div class="funnel-num">1</div>
+              <div class="funnel-body">
+                <div class="funnel-tag orange">Meta Ads</div>
+                <div class="funnel-title">El anuncio filtra por intención</div>
+                <div class="funnel-desc">Obra específica en espacio real. Copy: "¿Ya sabes cómo va a quedar tu sala?" CTA: botón WhatsApp directo. Sin landing, sin formulario.</div>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <div class="funnel-num">2</div>
+              <div class="funnel-body">
+                <div class="funnel-tag orange">WhatsApp Business</div>
+                <div class="funnel-title">Respuesta automática filtra por perfil</div>
+                <div class="funnel-desc">3 preguntas: tipo de obra, presupuesto ($20K / $20–60K / +$60K), espacio disponible. Quien responde = prospecto calificado.</div>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <div class="funnel-num">3</div>
+              <div class="funnel-body">
+                <div class="funnel-tag green">David</div>
+                <div class="funnel-title">David entra con contexto</div>
+                <div class="funnel-desc">Ya sabe qué busca, cuánto tiene y para qué espacio. Su primer mensaje es una recomendación directa, no una presentación.</div>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <div class="funnel-num">4</div>
+              <div class="funnel-body">
+                <div class="funnel-tag" style="background:var(--teal-dim);color:var(--teal);border:1px solid #00C8C830">Klaviyo</div>
+                <div class="funnel-title">Retención de quien no cierra hoy</div>
+                <div class="funnel-desc">David pide el correo al cerrar conversaciones sin venta. Flujo de bienvenida automatizado + correo mensual. El momento de compra puede llegar después.</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="wa-msg">
+              Hola, gracias por escribir a Galería Damel. Para recomendarte las obras que mejor se adaptan a lo que buscas, ayúdame con tres datos rápidos:<br><br>
+              1. ¿Qué tipo de obra te interesa? Escultura, pintura o gráfica.<br>
+              2. ¿Rango de presupuesto? $20–50K / $50–80K / más de $80K pesos.<br>
+              3. ¿Para qué espacio? Sala, comedor, recámara, oficina u otro.
+            </div>
+            <div class="callout">
+              <div class="callout-title">Regla del filtro</div>
+              <p>Si no responde en 48h: descartado del flujo activo. El tiempo de David vale más que perseguir prospectos sin intención.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 7 · CANALES Y PRESUPUESTO ───────────────────────────────
+  {
+    id: 'canales',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">05 · Canales y Presupuesto</div>
+        <div class="slide-title">$15,000 pesos.<br><em>Tres canales</em>, un objetivo.</div>
+        <div class="kpi-grid-3" style="margin-bottom:18px">
+          <div class="kpi-box accent">
+            <div class="kpi-label">Meta Ads</div>
+            <div class="kpi-value">$12K</div>
+            <div class="kpi-sub">Campañas de conversación WhatsApp · Objetivo: mensajes</div>
+          </div>
+          <div class="kpi-box accent">
+            <div class="kpi-label">WhatsApp Business</div>
+            <div class="kpi-value">$3K</div>
+            <div class="kpi-sub">Operación del canal · Respuestas automáticas · Filtro</div>
+          </div>
+          <div class="kpi-box teal">
+            <div class="kpi-label">Klaviyo</div>
+            <div class="kpi-value">Mín.</div>
+            <div class="kpi-sub">Flujo de bienvenida (1 vez) + correo mensual</div>
+          </div>
+        </div>
+        <div class="two-col" style="align-items:start;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-family:'DM Sans',sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);margin-bottom:4px">Creativos recomendados</div>
+            <div class="card accent-left">
+              <div class="card-label">Formato 1 · Arranque</div>
+              <div class="card-title">Obra en contexto de interior</div>
+              <div class="card-body">Sala, comedor, entrada. David ya tiene la app que genera estos renders en minutos. Es el formato con tracción probada.</div>
+            </div>
+            <div class="card accent-left">
+              <div class="card-label">Formato 2 · Conversión</div>
+              <div class="card-title">Storytelling de venta</div>
+              <div class="card-body">Alguien tenía un espacio, David asesoró, así quedó. Before & after. El material de la subasta del 18 de marzo es el primer insumo.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-family:'DM Sans',sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);margin-bottom:4px">Contenido orgánico (Instagram)</div>
+            <div class="card teal-left">
+              <div class="card-label" style="color:var(--teal)">Línea editorial · David opera</div>
+              <div class="card-title">Video corto de artista</div>
+              <div class="card-body">David habla 45–90 seg sobre un artista específico: historia, proceso, obra. 1 video por semana. La autenticidad vale más que la producción.</div>
+            </div>
+            <div class="callout teal" style="margin-top:0">
+              <div class="callout-title" style="color:var(--teal)">Función del orgánico</div>
+              <p>Cuando alguien ve el anuncio y revisa Instagram antes de escribir, lo que encuentra ahí decide si hace el clic o no.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 8 · REFERIDOS ───────────────────────────────────────────
+  {
+    id: 'referidos',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">05 · Canal de Referidos</div>
+        <div class="slide-title">El canal más barato<br>ya <em>está funcionando</em>.</div>
+        <div class="two-col" style="flex:1;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="callout">
+              <div class="callout-title">Por qué activarlo ahora</div>
+              <p>El 27% de los clientes han comprado más de una vez. La cadena suegra → hermana → amiga de Culiacán generó múltiples ventas y sigue activa. <strong>Solo falta pedirlo de manera consistente.</strong></p>
+            </div>
+            <div class="card accent-left">
+              <div class="card-label">Cuándo enviar el mensaje</div>
+              <div class="card-title">Post-compra, cuando el nivel de satisfacción es máximo</div>
+              <div class="card-body">Es el único momento en que pedir una referencia se siente natural. El cliente acaba de vivir el proceso completo y tiene la experiencia fresca.</div>
+            </div>
+            <div class="card accent-left">
+              <div class="card-label">Sobre incentivos</div>
+              <div class="card-title">Acceso anticipado a obra nueva</div>
+              <div class="card-body">Valor percibido alto, costo operativo casi cero. Mejor que porcentajes o descuentos que reducen el margen de una venta no asegurada.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:2px">Mensaje prescrito</div>
+            <div class="wa-msg">
+              [Nombre], me da mucho gusto que hayas quedado contento con tu obra. Oye, una pregunta: si conoces a alguien que esté decorando un espacio o que tenga ganas de tener una obra original en casa, me ayudaría mucho que me recomendaras. No tiene que saber nada de arte; yo me encargo de orientarlo desde cero. Con que me pases su contacto o le compartas el mío es suficiente. Te lo agradezco mucho.
+            </div>
+            <div class="card" style="border-color:var(--border2)">
+              <div class="card-label">Reglas de operación</div>
+              <div class="card-body" style="font-size:12px;line-height:1.8">
+                · Una vez por cliente, después de cada compra cerrada.<br>
+                · Sin seguimiento posterior sobre el mensaje.<br>
+                · Activar en el mes 1, antes de cualquier pauta.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 9 · PLAN DE ACTIVACIÓN ──────────────────────────────────
+  {
+    id: 'activacion',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">06 · Plan de Activación</div>
+        <div class="slide-title">El camino<br>al <em>lanzamiento</em>.</div>
+        <div class="timeline-grid" style="flex:1">
+          <div>
+            <div class="tl-col-title">Startop · Performance</div>
+            <div class="timeline">
+              <div class="tl-item milestone">
+                <div class="tl-date">Sem. 1</div>
+                <div class="tl-content">
+                  <div class="tl-tag on">Presentación</div>
+                  <div class="tl-title">Sesión de estrategia con David</div>
+                  <div class="tl-desc">Presentar este documento, recoger comentarios, ajustar de ser necesario. Performance toma las líneas de comunicación.</div>
+                </div>
+              </div>
+              <div class="tl-item milestone">
+                <div class="tl-date">Sem. 2</div>
+                <div class="tl-content">
+                  <div class="tl-tag on">Performance</div>
+                  <div class="tl-title">Meet con David — estrategia de lanzamiento</div>
+                  <div class="tl-desc">Performance presenta a David el plan de campañas. Producción de creativos. Aprobación antes del cierre de semana.</div>
+                </div>
+              </div>
+              <div class="tl-item launch">
+                <div class="tl-date">Sem. 3</div>
+                <div class="tl-content">
+                  <div class="tl-tag hito">Lanzamiento</div>
+                  <div class="tl-title">Primeras campañas activas</div>
+                  <div class="tl-desc">$3,000 pesos de arranque. Dos creativos en paralelo. David opera el filtro de WhatsApp.</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-date">Sem. 4</div>
+                <div class="tl-content">
+                  <div class="tl-tag setup">Evaluación</div>
+                  <div class="tl-title">Primera revisión de resultados</div>
+                  <div class="tl-desc">Conversaciones vs. calificados vs. cierres. Optimizar antes de escalar a $12K/mes.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="tl-col-title">David · Galería Damel</div>
+            <div class="timeline">
+              <div class="tl-item milestone">
+                <div class="tl-date">Sem. 1</div>
+                <div class="tl-content">
+                  <div class="tl-tag setup">Setup</div>
+                  <div class="tl-title">Configurar WhatsApp Business y Klaviyo</div>
+                  <div class="tl-desc">Mensaje automático de filtro activo. Cuenta Klaviyo creada. Compartir material visual disponible.</div>
+                </div>
+              </div>
+              <div class="tl-item milestone">
+                <div class="tl-date">Sem. 2</div>
+                <div class="tl-content">
+                  <div class="tl-tag on">Contenido</div>
+                  <div class="tl-title">Aprobar creativos</div>
+                  <div class="tl-desc">Revisar renders y videos. Dar luz verde antes del cierre de semana.</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-date">Sem. 3</div>
+                <div class="tl-content">
+                  <div class="tl-tag on">Operación</div>
+                  <div class="tl-title">Operar filtro de WhatsApp</div>
+                  <div class="tl-desc">Responder prospectos calificados con el script de entrada. Enviar mensaje de referidos a últimos 3–4 clientes.</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-date">Sem. 4</div>
+                <div class="tl-content">
+                  <div class="tl-tag setup">Revisión</div>
+                  <div class="tl-title">Sesión de resultados con Startop</div>
+                  <div class="tl-desc">Revisar métricas juntos. Decidir qué se optimiza para el mes 2.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 10 · MÉTRICAS ───────────────────────────────────────────
+  {
+    id: 'metricas',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">06 · Métricas de Éxito</div>
+        <div class="slide-title">Dos números.<br><em>Un diagnóstico</em> claro.</div>
+        <div class="two-col" style="flex:1;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="kpi-box accent" style="padding:24px">
+              <div class="kpi-label">Métrica 1 · Primeros 60 días</div>
+              <div class="kpi-value" style="font-size:42px">≥ 10</div>
+              <div class="card-title" style="font-size:15px;margin:8px 0 6px">Conversaciones calificadas / mes</div>
+              <div class="kpi-sub">Prospecto que respondió el filtro de WhatsApp con presupuesto de $20,000 pesos o más.</div>
+            </div>
+            <div class="kpi-box accent" style="padding:24px">
+              <div class="kpi-label">Métrica 2 · Mes 1</div>
+              <div class="kpi-value" style="font-size:42px">≥ 1</div>
+              <div class="card-title" style="font-size:15px;margin:8px 0 6px">Cierre atribuible al canal digital</div>
+              <div class="kpi-sub">Venta originada por Meta Ads o referido activado en este período.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="callout">
+              <div class="callout-title">Cómo usar estas dos métricas</div>
+              <p>Si ambas son bajas: el problema está en el anuncio.<br>Si la primera es buena y la segunda es baja: el problema está en la conversación de David.<br><strong>Esa distinción define qué se optimiza.</strong></p>
+            </div>
+            <table class="metric-table" style="background:var(--surface);border-radius:10px;overflow:hidden">
+              <thead><tr><th>Benchmark</th><th>Objetivo</th></tr></thead>
+              <tbody>
+                <tr><td>Conversaciones calificadas / mes 1</td><td class="hl">Mínimo 10</td></tr>
+                <tr><td>Cierre atribuible / mes 1</td><td class="hl">Mínimo 1 venta</td></tr>
+                <tr><td>Costo por conv. calificada</td><td class="hl">≤ $600 pesos</td></tr>
+                <tr><td>Meta de ingresos / mes 3</td><td class="hl">$250,000 pesos</td></tr>
+                <tr><td>Meta semestral</td><td class="hl">$1,500,000 pesos</td></tr>
+              </tbody>
+            </table>
+            <div class="callout teal" style="margin-top:0">
+              <div class="callout-title" style="color:var(--teal)">Hipótesis clave del mes 2</div>
+              <p>Si las conversaciones calificadas no suben, el problema está en el filtro previo: en el creativo o en la segmentación, no en David para cerrar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 11 · PRÓXIMOS PASOS ─────────────────────────────────────
+  {
+    id: 'proximos-pasos',
+    render: () => `
+      <div class="slide">
+        <div class="topbar">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital</div>
+          <div class="topbar-info">Startop Consulting · 2026</div>
+        </div>
+        <div class="slide-label">Próximos Pasos</div>
+        <div class="slide-title">Tres acciones<br><em>esta semana</em>.</div>
+        <div class="three-col" style="flex:1;align-items:start">
+          <div class="paso-card">
+            <div class="paso-num">01</div>
+            <div class="paso-title">Configurar WhatsApp Business</div>
+            <div class="paso-body">Activar el mensaje automático de bienvenida con el filtro de tres preguntas. Conectar el número a la cuenta publicitaria de Meta.</div>
+            <div class="paso-owner">David</div>
+          </div>
+          <div class="paso-card">
+            <div class="paso-num">02</div>
+            <div class="paso-title">Compartir material visual</div>
+            <div class="paso-body">Fotos de obras, renders generados con la app, videos disponibles de subastas anteriores. Insumo para los primeros creativos de pauta.</div>
+            <div class="paso-owner">David</div>
+          </div>
+          <div class="paso-card">
+            <div class="paso-num">03</div>
+            <div class="paso-title">Meet con equipo Performance</div>
+            <div class="paso-body">Semana 2. Performance presenta la estrategia de lanzamiento. Se definen audiencias, objetivo de campaña y cronograma de activación.</div>
+            <div class="paso-owner teal">Startop + David</div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:18px">
+          <div class="callout-title">Entregables al cierre de esta sesión</div>
+          <p>Este documento en PDF + la presentación que estás viendo ahora. Quedan como referencia para el equipo de Performance en el handoff.</p>
+        </div>
+      </div>
+    `
+  },
+
+  // ── 12 · CIERRE ─────────────────────────────────────────────
+  {
+    id: 'cierre',
+    render: () => `
+      <div class="slide slide-close">
+        <div class="topbar" style="border-bottom-color:transparent">
+          <div class="topbar-brand">Galería Damel · Estrategia Canal Digital · 2026</div>
+          <div class="topbar-info">Startop Consulting · Confidencial</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center">
+          <div style="font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:0.2em;color:var(--muted);margin-bottom:24px;text-transform:uppercase">Startop Consulting</div>
+          <div class="cover-title" style="font-size:clamp(40px,5vw,68px)">
+            <span class="line1">Listos para</span>
+            <span class="line2">arrancar.</span>
+          </div>
+          <div style="font-size:15px;color:var(--muted);max-width:500px;margin:20px auto 44px;line-height:1.7">
+            Canal configurado en semana 1. Creativos aprobados en semana 2. Primeras campañas activas en semana 3. Primera revisión de resultados en semana 4.
+          </div>
+          <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
+            <div class="person-card">
+              <div class="person-avatar">FD</div>
+              <div class="person-name">Fhernando Duarte</div>
+              <div class="person-role">Consultor · Startop</div>
+            </div>
+            <div class="person-card">
+              <div class="person-avatar">JA</div>
+              <div class="person-name">José Andrés Cantú</div>
+              <div class="person-role">Dirección · Startop</div>
+            </div>
+            <div class="person-card" style="border-color:var(--orange-glow)">
+              <div class="person-avatar">DA</div>
+              <div class="person-name">David Amione</div>
+              <div class="person-role">Galería Damel</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+];
+
+// ── ENGINE ───────────────────────────────────────────────────
+const deck   = document.getElementById('deck');
+const dotsEl = document.getElementById('dots');
+const counter = document.getElementById('slide-counter');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+let current = 0;
+
+function renderAll() {
+  deck.innerHTML = slides.map((s, i) => {
+    const html = s.render();
+    return html.replace('<div class="slide', `<div class="slide" data-index="${i}"`);
+  }).join('');
+  dotsEl.innerHTML = slides.map((_, i) =>
+    `<div class="dot ${i === 0 ? 'active' : ''}" data-i="${i}"></div>`
+  ).join('');
+  dotsEl.querySelectorAll('.dot').forEach(d => {
+    d.addEventListener('click', () => goTo(+d.dataset.i));
+  });
+}
+
+function goTo(idx) {
+  if (idx < 0 || idx >= slides.length) return;
+  const slideEls = deck.querySelectorAll('[data-index]');
+  const prev = slideEls[current];
+  if (prev) {
+    prev.classList.remove('active');
+    prev.classList.add('exit-left');
+    setTimeout(() => prev.classList.remove('exit-left'), 400);
+  }
+  current = idx;
+  const next = slideEls[current];
+  if (next) {
+    next.style.transform = 'translateX(60px)';
+    next.offsetHeight;
+    next.style.transform = '';
+    next.classList.add('active');
+  }
+  dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  counter.textContent = `${current + 1} / ${slides.length}`;
+  prevBtn.disabled = current === 0;
+  nextBtn.disabled = current === slides.length - 1;
+}
+
+prevBtn.addEventListener('click', () => goTo(current - 1));
+nextBtn.addEventListener('click', () => goTo(current + 1));
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
+});
+
+// Nav auto-hide
+const nav = document.getElementById('nav');
+let hideTimer;
+function showNav() {
+  nav.classList.remove('hidden');
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => nav.classList.add('hidden'), 2500);
+}
+document.addEventListener('mousemove', showNav);
+document.addEventListener('click', showNav);
+
+renderAll();
+goTo(0);
+</script>
+</body>
+</html>
